@@ -1,279 +1,592 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>스마트 가정통신문 생성기</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>가정통신문 생성기</title>
   <style>
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: #f1f5f9; rounded: 4px; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --secondary: #eef2ff;
+      --danger: #dc2626;
+      --success: #047857;
+      --shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "Noto Sans KR", Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg, #eef2ff 0, var(--bg) 260px);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      width: min(940px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 54px 0 70px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .header h1 {
+      margin: 0 0 10px;
+      font-size: clamp(30px, 5vw, 44px);
+      letter-spacing: -0.04em;
+    }
+
+    .header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(229, 231, 235, 0.9);
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0 0 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field:last-child { margin-bottom: 0; }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 750;
+      margin-bottom: 8px;
+    }
+
+    .required {
+      color: var(--danger);
+      margin-left: 3px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 13px 14px;
+      font: inherit;
+      outline: none;
+      transition: 0.2s;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.10);
+    }
+
+    textarea {
+      min-height: 112px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .hint {
+      margin-top: 7px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .length-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .length-option {
+      position: relative;
+    }
+
+    .length-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .length-option label {
+      margin: 0;
+      cursor: pointer;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 13px 10px;
+      text-align: center;
+      font-weight: 700;
+      transition: 0.2s;
+      background: #fff;
+    }
+
+    .length-option input:checked + label {
+      border-color: var(--primary);
+      background: var(--secondary);
+      color: var(--primary);
+      box-shadow: inset 0 0 0 1px var(--primary);
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 20px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .primary {
+      flex: 1;
+      background: var(--primary);
+      color: white;
+    }
+
+    .primary:hover { background: var(--primary-hover); }
+    .primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .secondary:hover { background: #e5e7eb; }
+
+    .status {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-top: 16px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .status.show { display: block; }
+    .status.error { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; }
+    .status.loading { color: #3730a3; background: #eef2ff; border: 1px solid #c7d2fe; }
+
+    .result-card {
+      display: none;
+    }
+
+    .result-card.show {
+      display: block;
+      animation: fadeIn .25s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .result-head h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .result {
+      white-space: pre-wrap;
+      line-height: 1.85;
+      background: #fafafa;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 20px;
+      min-height: 150px;
+      font-size: 15px;
+    }
+
+    .result-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .small-btn {
+      padding: 10px 14px;
+      font-size: 13px;
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .copy-ok {
+      color: var(--success);
+      font-size: 13px;
+      min-height: 20px;
+      text-align: right;
+      margin-top: 7px;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 720px) {
+      .grid { grid-template-columns: 1fr; gap: 0; }
+      .card { padding: 20px; border-radius: 18px; }
+      .length-options { grid-template-columns: 1fr; }
+      .actions { flex-direction: column; }
+      .secondary { order: 2; }
+      .wrap { padding-top: 32px; }
+    }
   </style>
 </head>
-<body class="bg-emerald-50 text-slate-800 font-sans min-h-screen pb-20">
-  <div class="max-w-4xl mx-auto p-6 pt-10">
-    
-    <!-- 헤더 -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-extrabold text-emerald-900 tracking-tight flex items-center gap-2">
-        스마트 가정통신문 생성기 💌
-      </h1>
-      <p class="text-emerald-700 mt-2">AI와 웹 검색을 활용하여 공식적이고 단정한 가정통신문을 작성해 드립니다.</p>
-    </div>
+<body>
+  <main class="wrap">
+    <header class="header">
+      <h1>가정통신문 생성기</h1>
+      <p>필요한 내용을 입력하면 AI 에이전트가 가정통신문 초안을 생성합니다.</p>
+    </header>
 
-    <!-- 0. 에이전트 설정 -->
-    <div class="bg-white rounded-xl shadow-sm border border-emerald-200 mb-6 overflow-hidden">
-      <button id="toggleSettingsBtn" class="w-full text-left px-6 py-4 font-semibold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 transition flex justify-between items-center outline-none">
-        <span class="flex items-center gap-2">⚙️ 에이전트 연결 설정</span>
-        <svg class="w-5 h-5 transform transition-transform text-emerald-600" id="settingsIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-      </button>
-      <div id="settingsContent" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white hidden">
-        <div>
-          <label class="block text-sm font-bold text-slate-700 mb-2">Base URL</label>
-          <input type="text" id="baseUrlInput" value="https://langbridge.kosac.laivdata.com" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-700 text-sm">
+    <section class="card">
+      <h2 class="section-title">에이전트 설정</h2>
+
+      <div class="grid">
+        <div class="field">
+          <label for="agentId">에이전트 ID <span class="required">*</span></label>
+          <input
+            id="agentId"
+            type="password"
+            autocomplete="off"
+            placeholder="에이전트 ID를 입력하세요"
+            required
+          />
+          <div class="hint">입력한 ID는 화면에서 ●●● 형태로 가려집니다.</div>
         </div>
-        <div>
-          <label class="block text-sm font-bold text-slate-700 mb-2">Agent ID</label>
-          <!-- type을 password로 변경하여 어떤 내용을 치더라도 ***로 보이게 처리 -->
-          <input type="password" id="agentIdInput" value="6a605d7a1c4a469e7abef38b" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-700 text-sm tracking-widest">
+
+        <div class="field">
+          <label for="baseUrl">LangBridge URL</label>
+          <input
+            id="baseUrl"
+            type="url"
+            value="https://langbridge.kosac.laivdata.com"
+            placeholder="https://langbridge.kosac.laivdata.com"
+          />
+          <div class="hint">기본값을 그대로 사용해도 됩니다.</div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 1. 가정통신문 입력 폼 -->
-    <div class="bg-white rounded-xl shadow-sm border border-emerald-200 p-6 mb-6">
-      <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-        <span class="bg-emerald-100 text-emerald-700 w-6 h-6 rounded-full flex items-center justify-center text-sm">📝</span> 
-        가정통신문 내용 입력
-      </h2>
-      
-      <div class="space-y-5">
-        <!-- 주제 -->
-        <div>
-          <label class="block text-sm font-bold text-slate-700 mb-2">1. 가정통신문 주제 <span class="text-red-500">*</span></label>
-          <input type="text" id="topicInput" placeholder="예: 교내 스마트폰 사용 제한 안내" class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-700 text-sm">
-        </div>
+    <section class="card">
+      <h2 class="section-title">가정통신문 내용</h2>
 
-        <!-- 학교의 요청사항 -->
-        <div>
-          <label class="block text-sm font-bold text-slate-700 mb-2">2. 학교의 요청사항 (핵심 당부 내용)</label>
-          <textarea id="requestInput" rows="3" placeholder="예: 수업 시간 중 스마트폰 전원 끄기, 위반 시 규정에 따른 조치 안내 등" class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-700 text-sm resize-y"></textarea>
-        </div>
+      <div class="field">
+        <label for="topic">1. 가정통신문 주제 <span class="required">*</span></label>
+        <input
+          id="topic"
+          type="text"
+          placeholder="예: 교내 슬리퍼 착용 금지 안내"
+          required
+        />
+      </div>
 
-        <!-- 기타 참고사항 -->
-        <div>
-          <label class="block text-sm font-bold text-slate-700 mb-2">3. 기타 참고/강조 사항</label>
-          <textarea id="noteInput" rows="2" placeholder="예: 가정에서도 학생들의 올바른 스마트폰 사용을 지도해 주시기를 강력히 당부함." class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-700 text-sm resize-y"></textarea>
-        </div>
+      <div class="field">
+        <label for="request">2. 학교의 요청 사항</label>
+        <textarea
+          id="request"
+          placeholder="예: 학생이 등교 시 반드시 실내화를 준비하고 착용하도록 가정에서 지도해 주세요."
+        ></textarea>
+      </div>
 
-        <!-- 옵션 (길이 및 계절인사) -->
-        <div class="flex flex-col md:flex-row gap-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <div class="flex-1">
-            <label class="block text-sm font-bold text-slate-700 mb-2">글 분량 선택</label>
-            <div class="flex bg-slate-200 rounded-lg p-1 gap-1">
-              <label class="flex-1 text-center cursor-pointer">
-                <input type="radio" name="lengthOption" value="짧게" class="peer sr-only">
-                <div class="py-2 text-sm font-medium text-slate-500 rounded-md peer-checked:bg-white peer-checked:text-emerald-700 peer-checked:shadow-sm transition-all">짧게 (핵심만)</div>
-              </label>
-              <label class="flex-1 text-center cursor-pointer">
-                <input type="radio" name="lengthOption" value="중간" class="peer sr-only" checked>
-                <div class="py-2 text-sm font-medium text-slate-500 rounded-md peer-checked:bg-white peer-checked:text-emerald-700 peer-checked:shadow-sm transition-all">중간 (표준)</div>
-              </label>
-              <label class="flex-1 text-center cursor-pointer">
-                <input type="radio" name="lengthOption" value="길게" class="peer sr-only">
-                <div class="py-2 text-sm font-medium text-slate-500 rounded-md peer-checked:bg-white peer-checked:text-emerald-700 peer-checked:shadow-sm transition-all">길게 (상세히)</div>
-              </label>
-            </div>
+      <div class="field">
+        <label for="reference">3. 기타 참고 사항</label>
+        <textarea
+          id="reference"
+          placeholder="예: 미끄러짐 사고 예방, 발 건강 보호, 교내 위생 관리 목적"
+        ></textarea>
+      </div>
+
+      <div class="field">
+        <label>글 분량</label>
+        <div class="length-options">
+          <div class="length-option">
+            <input type="radio" id="short" name="length" value="짧게(100자 내외)" />
+            <label for="short">짧게<br><small>100자 내외</small></label>
           </div>
-
-          <div class="flex-1 flex flex-col justify-center">
-            <label class="block text-sm font-bold text-slate-700 mb-2">추가 옵션</label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" id="greetingCheckbox" checked class="w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
-              <span class="text-sm font-medium text-slate-700">도입부에 포멀한 인사말 포함하기</span>
-            </label>
+          <div class="length-option">
+            <input type="radio" id="medium" name="length" value="중간(300자 내외)" />
+            <label for="medium">중간<br><small>300자 내외</small></label>
+          </div>
+          <div class="length-option">
+            <input type="radio" id="standard" name="length" value="표준(500자 내외)" checked />
+            <label for="standard">표준<br><small>500자 내외</small></label>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 2. 액션 바 -->
-    <div class="flex items-center justify-center mb-8">
-      <button id="startBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg transition disabled:bg-slate-400 disabled:cursor-not-allowed w-full text-lg flex items-center justify-center gap-2">
-        공식 가정통신문 생성하기 📝
-      </button>
-    </div>
+      <div class="actions">
+        <button class="secondary" id="resetBtn" type="button">입력 초기화</button>
+        <button class="primary" id="generateBtn" type="button">가정통신문 생성하기</button>
+      </div>
 
-    <!-- 3. 결과 화면 -->
-    <div class="bg-white rounded-xl shadow-sm border border-emerald-200 p-6 hidden" id="resultContainer">
-      <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-4">
-        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-          <span class="bg-emerald-100 text-emerald-700 w-6 h-6 rounded-full flex items-center justify-center text-sm">💡</span> 
-          생성 결과
-        </h2>
-        <button id="copyBtn" class="bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 px-5 rounded-lg shadow transition flex items-center gap-2 text-sm">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-          결과 복사
+      <div id="status" class="status" aria-live="polite"></div>
+    </section>
+
+    <section class="card result-card" id="resultCard">
+      <div class="result-head">
+        <h2>생성된 가정통신문</h2>
+      </div>
+      <div id="result" class="result"></div>
+
+      <div class="result-actions">
+        <button class="small-btn" id="copyBtn" type="button">내용 복사</button>
+        <button class="primary" id="regenerateBtn" type="button" style="flex:0 0 auto;">
+          다시 생성하기
         </button>
       </div>
-      
-      <div id="resultBox" class="bg-slate-50 border border-slate-200 rounded-lg p-8 text-slate-800 leading-loose text-base whitespace-pre-wrap min-h-[300px]"></div>
-    </div>
+      <div id="copyMessage" class="copy-ok"></div>
+    </section>
 
-  </div>
+    <p class="footer-note">
+      ※ 에이전트 ID를 비밀번호 형식으로 가리는 것은 화면 표시만 숨기는 기능입니다.
+      브라우저에서 API를 직접 호출하므로 개발자 도구의 네트워크 요청에서는 값이 확인될 수 있습니다.
+    </p>
+  </main>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
-      const settingsContent = document.getElementById('settingsContent');
-      const settingsIcon = document.getElementById('settingsIcon');
-      
-      const startBtn = document.getElementById('startBtn');
-      const resultContainer = document.getElementById('resultContainer');
-      const resultBox = document.getElementById('resultBox');
-      const copyBtn = document.getElementById('copyBtn');
+    const $ = (selector) => document.querySelector(selector);
 
-      toggleSettingsBtn.addEventListener('click', () => {
-        settingsContent.classList.toggle('hidden');
-        settingsIcon.classList.toggle('rotate-180');
-      });
+    const agentIdInput = $("#agentId");
+    const baseUrlInput = $("#baseUrl");
+    const topicInput = $("#topic");
+    const requestInput = $("#request");
+    const referenceInput = $("#reference");
+    const generateBtn = $("#generateBtn");
+    const regenerateBtn = $("#regenerateBtn");
+    const resetBtn = $("#resetBtn");
+    const resultCard = $("#resultCard");
+    const resultBox = $("#result");
+    const statusBox = $("#status");
+    const copyBtn = $("#copyBtn");
+    const copyMessage = $("#copyMessage");
 
-      // API 호출 함수
-      async function runAgent(userInputText, baseUrl, agentId) {
-        const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-        
+    function normalizeBaseUrl(url) {
+      return url.trim().replace(/\/+$/, "");
+    }
+
+    function getSelectedLength() {
+      return document.querySelector('input[name="length"]:checked')?.value || "표준(500자 내외)";
+    }
+
+    function setStatus(message = "", type = "") {
+      statusBox.textContent = message;
+      statusBox.className = "status";
+      if (message) {
+        statusBox.classList.add("show");
+        if (type) statusBox.classList.add(type);
+      }
+    }
+
+    function buildUserInput() {
+      const topic = topicInput.value.trim();
+      const request = requestInput.value.trim();
+      const reference = referenceInput.value.trim();
+      const length = getSelectedLength();
+
+      return [
+        "다음 정보를 바탕으로 학부모에게 보내는 자연스럽고 정중한 가정통신문을 작성해 주세요.",
+        "별도의 설명 없이 가정통신문 본문만 작성하세요.",
+        `글 분량: ${length}`,
+        "",
+        `[가정통신문 주제]`,
+        topic,
+        "",
+        `[학교의 요청 사항]`,
+        request || "별도 요청 사항 없음",
+        "",
+        `[기타 참고 사항]`,
+        reference || "별도 참고 사항 없음"
+      ].join("\n");
+    }
+
+    async function runAgent() {
+      const agentId = agentIdInput.value.trim();
+      const baseUrl = normalizeBaseUrl(baseUrlInput.value);
+      const topic = topicInput.value.trim();
+
+      if (!agentId) {
+        setStatus("에이전트 ID를 입력해 주세요.", "error");
+        agentIdInput.focus();
+        return;
+      }
+
+      if (!baseUrl) {
+        setStatus("LangBridge URL을 입력해 주세요.", "error");
+        baseUrlInput.focus();
+        return;
+      }
+
+      if (!topic) {
+        setStatus("가정통신문 주제를 입력해 주세요.", "error");
+        topicInput.focus();
+        return;
+      }
+
+      generateBtn.disabled = true;
+      regenerateBtn.disabled = true;
+      copyMessage.textContent = "";
+      setStatus("가정통신문을 생성하고 있습니다…", "loading");
+
+      try {
         // 1. 세션 생성
-        const sessionRes = await fetch(`${cleanBaseUrl}/sessions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ agentId: agentId })
-        });
-        if (!sessionRes.ok) throw new Error(`세션 생성 실패 (${sessionRes.status})`);
-        const sessionData = await sessionRes.json();
-        const sessionId = sessionData.sessionId;
-
-        // 2. 에이전트 실행 (userInput 으로 매핑)
-        const runRes = await fetch(`${cleanBaseUrl}/agents/run`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const sessionResponse = await fetch(`${baseUrl}/sessions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify({
-            sessionId: sessionId,
-            query: { 
-              userInput: userInputText 
-            } 
+            agentId: agentId
           })
         });
-        if (!runRes.ok) throw new Error(`에이전트 실행 실패 (${runRes.status})`);
-        
-        return await runRes.json();
-      }
 
-      // 결과 파싱
-      function parseStringResponse(data) {
-        if (typeof data === 'string') return data;
-        if (data.answer) return data.answer;
-        if (data.output) return data.output;
-        if (data.result) return data.result;
-        
-        let longestString = "";
-        JSON.stringify(data, (key, value) => {
-          if (typeof value === 'string' && value.length > longestString.length) {
-            longestString = value;
-          }
-          return value;
+        if (!sessionResponse.ok) {
+          const errorText = await sessionResponse.text();
+          throw new Error(`세션 생성 실패 (${sessionResponse.status})${errorText ? ": " + errorText : ""}`);
+        }
+
+        const sessionData = await sessionResponse.json();
+        const sessionId = sessionData.sessionId;
+
+        if (!sessionId) {
+          throw new Error("응답에서 sessionId를 찾을 수 없습니다.");
+        }
+
+        // 2. Agent 실행
+        const runResponse = await fetch(`${baseUrl}/agents/run`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            sessionId: sessionId,
+            query: {
+              userInput: buildUserInput()
+            }
+          })
         });
-        return longestString || "결과를 파싱할 수 없습니다.";
+
+        if (!runResponse.ok) {
+          const errorText = await runResponse.text();
+          throw new Error(`에이전트 실행 실패 (${runResponse.status})${errorText ? ": " + errorText : ""}`);
+        }
+
+        const data = await runResponse.json();
+
+        // 대표 응답 형식: { "answer": "..." }
+        const answer =
+          data?.answer ??
+          data?.data?.answer ??
+          data?.result?.answer ??
+          (typeof data === "string" ? data : JSON.stringify(data, null, 2));
+
+        resultBox.textContent = answer || "생성 결과가 비어 있습니다.";
+        resultCard.classList.add("show");
+        setStatus("");
+
+        resultCard.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      } catch (error) {
+        console.error(error);
+        let message = error?.message || "알 수 없는 오류가 발생했습니다.";
+
+        if (message.toLowerCase().includes("failed to fetch")) {
+          message +=
+            "\n\n브라우저의 CORS 정책 때문에 요청이 차단되었을 수 있습니다. " +
+            "이 경우 LangBridge 서버에서 해당 웹페이지 출처를 허용하거나, 별도의 백엔드 프록시를 통해 호출해야 합니다.";
+        }
+
+        setStatus(message, "error");
+      } finally {
+        generateBtn.disabled = false;
+        regenerateBtn.disabled = false;
+      }
+    }
+
+    generateBtn.addEventListener("click", runAgent);
+    regenerateBtn.addEventListener("click", runAgent);
+
+    resetBtn.addEventListener("click", () => {
+      topicInput.value = "";
+      requestInput.value = "";
+      referenceInput.value = "";
+      $("#standard").checked = true;
+      setStatus("");
+      resultBox.textContent = "";
+      resultCard.classList.remove("show");
+      copyMessage.textContent = "";
+      topicInput.focus();
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      const text = resultBox.textContent.trim();
+      if (!text) return;
+
+      try {
+        await navigator.clipboard.writeText(text);
+        copyMessage.textContent = "복사되었습니다.";
+      } catch {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+        copyMessage.textContent = "복사되었습니다.";
       }
 
-      startBtn.addEventListener('click', async () => {
-        const topic = document.getElementById('topicInput').value.trim();
-        if (!topic) {
-          alert('가정통신문 주제를 입력해 주세요.');
-          document.getElementById('topicInput').focus();
-          return;
-        }
-
-        const baseUrl = document.getElementById('baseUrlInput').value.trim();
-        const agentId = document.getElementById('agentIdInput').value.trim();
-        if (!baseUrl || !agentId) {
-          alert('에이전트 설정을 확인해 주세요.');
-          settingsContent.classList.remove('hidden');
-          return;
-        }
-
-        const requests = document.getElementById('requestInput').value.trim() || '특별한 요청사항 없음';
-        const notes = document.getElementById('noteInput').value.trim() || '특별한 참고사항 없음';
-        const lengthOption = document.querySelector('input[name="lengthOption"]:checked').value;
-        const includeGreeting = document.getElementById('greetingCheckbox').checked;
-
-        // 🚨 핵심 변경점: AI가 절대 딴청 피우지 못하도록 HTML에서 직접 규칙을 박아 넣습니다.
-        const combinedPrompt = `[가정통신문 작성 기본 정보]
-- 주제: ${topic}
-- 학교의 요청사항: ${requests}
-- 기타 참고사항: ${notes}
-- 희망 분량: ${lengthOption}
-- 계절 인사: ${includeGreeting ? '포함' : '생략'}
-
-🚨 [AI 작성자 3대 절대 규칙 - 위반 시 시스템 오류 발생] 🚨
-위 정보를 바탕으로 학부모님께 보낼 가정통신문을 작성하되, 아래 규칙을 100% 지키시오.
-1. 기호 및 표 절대 금지: 마크다운 표, 리스트 기호(1. 2. 3. 또는 -)를 절대 쓰지 말고 오직 '자연스러운 줄글(서술형 단락)'로만 작성할 것.
-2. 챗봇 말투 절대 금지: "안녕하세요", "이야기해볼까 합니다", "궁금한 점 물어보세요" 등 가벼운 대화체나 감탄사를 절대 쓰지 말 것.
-3. 공문서 어투 사용: "~하십시오", "~안내해 드립니다", "~바랍니다" 등 극도로 정중하고 무미건조한 학교장 명의의 공식 문서 톤을 유지할 것.`.trim();
-
-        startBtn.disabled = true;
-        startBtn.innerHTML = `
-          <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          자료를 검색하고 문서를 작성 중입니다...
-        `;
-        resultContainer.classList.add('hidden');
-        resultBox.innerText = '';
-
-        try {
-          const apiResult = await runAgent(combinedPrompt, baseUrl, agentId);
-          let finalContent = parseStringResponse(apiResult);
-          
-          // 방어용 강제 기호 필터링
-          finalContent = finalContent.replace(/[*#_`>]/g, '');
-          finalContent = finalContent.replace(/\|/g, '');
-          finalContent = finalContent.replace(/---+/g, '');
-          finalContent = finalContent.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '');
-          
-          resultBox.innerText = finalContent.trim();
-          resultContainer.classList.remove('hidden');
-          
-        } catch (err) {
-          console.error(err);
-          resultBox.innerHTML = `<span class="text-red-600 font-bold">오류가 발생했습니다:</span><br>${err.message}`;
-          resultContainer.classList.remove('hidden');
-        } finally {
-          startBtn.disabled = false;
-          startBtn.innerHTML = '다시 생성하기 🔄';
-        }
-      });
-
-      // 복사 기능
-      copyBtn.addEventListener('click', () => {
-        const textToCopy = resultBox.innerText;
-        if (!textToCopy) return;
-        
-        navigator.clipboard.writeText(textToCopy);
-        
-        const originalHtml = copyBtn.innerHTML;
-        copyBtn.innerHTML = '✔ 복사 완료';
-        copyBtn.classList.replace('bg-slate-800', 'bg-emerald-600');
-        copyBtn.classList.replace('hover:bg-slate-900', 'hover:bg-emerald-700');
-        
-        setTimeout(() => {
-          copyBtn.innerHTML = originalHtml;
-          copyBtn.classList.replace('bg-emerald-600', 'bg-slate-800');
-          copyBtn.classList.replace('hover:bg-emerald-700', 'hover:bg-slate-900');
-        }, 1500);
-      });
+      setTimeout(() => {
+        copyMessage.textContent = "";
+      }, 1800);
     });
   </script>
 </body>
