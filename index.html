@@ -15,17 +15,6 @@
 <body class="bg-emerald-50 text-slate-800 font-sans min-h-screen pb-20">
   <div class="max-w-4xl mx-auto p-6 pt-10">
     
-    <!-- 안내 문구 -->
-    <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-8 text-amber-800 text-sm shadow-sm rounded-r-md">
-      <div class="flex items-start">
-        <svg class="w-5 h-5 mr-2 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-        <div>
-          <p class="font-bold mb-1">💡 실행 안내</p>
-          <p>Tavily API 키가 등록된 에이전트여야 정상 검색이 가능합니다. 에러 발생 시 워크플로우의 배포(Publish) 상태를 확인해 주세요.</p>
-        </div>
-      </div>
-    </div>
-
     <!-- 헤더 -->
     <div class="mb-8">
       <h1 class="text-3xl font-extrabold text-emerald-900 tracking-tight flex items-center gap-2">
@@ -47,7 +36,8 @@
         </div>
         <div>
           <label class="block text-sm font-bold text-slate-700 mb-2">Agent ID</label>
-          <input type="text" id="agentIdInput" value="6a605d7a1c4a469e7abef38b" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-700 text-sm">
+          <!-- type을 password로 변경하여 어떤 내용을 치더라도 ***로 보이게 처리 -->
+          <input type="password" id="agentIdInput" value="6a605d7a1c4a469e7abef38b" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-700 text-sm tracking-widest">
         </div>
       </div>
     </div>
@@ -218,14 +208,19 @@
         const lengthOption = document.querySelector('input[name="lengthOption"]:checked').value;
         const includeGreeting = document.getElementById('greetingCheckbox').checked;
 
-        // AI에게 전달할 최종 텍스트 조립
-        const combinedPrompt = `
-[주제] ${topic}
-[학교의 요청사항] ${requests}
-[기타 참고사항] ${notes}
-[분량] ${lengthOption}
-[계절 인사] ${includeGreeting ? '포함' : '생략'}
-        `.trim();
+        // 🚨 핵심 변경점: AI가 절대 딴청 피우지 못하도록 HTML에서 직접 규칙을 박아 넣습니다.
+        const combinedPrompt = `[가정통신문 작성 기본 정보]
+- 주제: ${topic}
+- 학교의 요청사항: ${requests}
+- 기타 참고사항: ${notes}
+- 희망 분량: ${lengthOption}
+- 계절 인사: ${includeGreeting ? '포함' : '생략'}
+
+🚨 [AI 작성자 3대 절대 규칙 - 위반 시 시스템 오류 발생] 🚨
+위 정보를 바탕으로 학부모님께 보낼 가정통신문을 작성하되, 아래 규칙을 100% 지키시오.
+1. 기호 및 표 절대 금지: 마크다운 표, 리스트 기호(1. 2. 3. 또는 -)를 절대 쓰지 말고 오직 '자연스러운 줄글(서술형 단락)'로만 작성할 것.
+2. 챗봇 말투 절대 금지: "안녕하세요", "이야기해볼까 합니다", "궁금한 점 물어보세요" 등 가벼운 대화체나 감탄사를 절대 쓰지 말 것.
+3. 공문서 어투 사용: "~하십시오", "~안내해 드립니다", "~바랍니다" 등 극도로 정중하고 무미건조한 학교장 명의의 공식 문서 톤을 유지할 것.`.trim();
 
         startBtn.disabled = true;
         startBtn.innerHTML = `
@@ -242,17 +237,12 @@
           const apiResult = await runAgent(combinedPrompt, baseUrl, agentId);
           let finalContent = parseStringResponse(apiResult);
           
-          // --- 최강력 강제 청소 필터 (AI가 지시를 어길 경우 대비) ---
-          // 1. 마크다운 기호 완전히 제거 (*, #, _, `, >)
+          // 방어용 강제 기호 필터링
           finalContent = finalContent.replace(/[*#_`>]/g, '');
-          // 2. 표(Table) 구성을 위한 구분선(|) 제거
           finalContent = finalContent.replace(/\|/g, '');
-          // 3. 점선/실선(---) 가로줄 제거
           finalContent = finalContent.replace(/---+/g, '');
-          // 4. 이모지 강제 제거
           finalContent = finalContent.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '');
           
-          // 결과 표시
           resultBox.innerText = finalContent.trim();
           resultContainer.classList.remove('hidden');
           
