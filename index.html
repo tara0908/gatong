@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>스마트 가정통신문 생성기</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; rounded: 4px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-emerald-50 text-slate-800 font-sans min-h-screen pb-20">
+  <div class="max-w-4xl mx-auto p-6 pt-10">
+    
+    <!-- 안내 문구 -->
+    <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-8 text-amber-800 text-sm shadow-sm rounded-r-md">
+      <div class="flex items-start">
+        <svg class="w-5 h-5 mr-2 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <div>
+          <p class="font-bold mb-1">💡 실행 안내</p>
+          <p>Tavily API 키가 등록된 에이전트여야 정상 검색이 가능합니다. 에러 발생 시 워크플로우의 배포(Publish) 상태를 확인해 주세요.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 헤더 -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-extrabold text-emerald-900 tracking-tight flex items-center gap-2">
+        스마트 가정통신문 생성기 💌
+      </h1>
+      <p class="text-emerald-700 mt-2">AI와 웹 검색을 활용하여 공식적이고 단정한 가정통신문을 작성해 드립니다.</p>
+    </div>
+
+    <!-- 0. 에이전트 설정 -->
+    <div class="bg-white rounded-xl shadow-sm border border-emerald-200 mb-6 overflow-hidden">
+      <button id="toggleSettingsBtn" class="w-full text-left px-6 py-4 font-semibold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 transition flex justify-between items-center outline-none">
+        <span class="flex items-center gap-2">⚙️ 에이전트 연결 설정</span>
+        <svg class="w-5 h-5 transform transition-transform text-emerald-600" id="settingsIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+      </button>
+      <div id="settingsContent" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white hidden">
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-2">Base URL</label>
+          <input type="text" id="baseUrlInput" value="https://langbridge.kosac.laivdata.com" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-700 text-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-2">Agent ID</label>
+          <input type="text" id="agentIdInput" value="6a605d7a1c4a469e7abef38b" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-700 text-sm">
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. 가정통신문 입력 폼 -->
+    <div class="bg-white rounded-xl shadow-sm border border-emerald-200 p-6 mb-6">
+      <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+        <span class="bg-emerald-100 text-emerald-700 w-6 h-6 rounded-full flex items-center justify-center text-sm">📝</span> 
+        가정통신문 내용 입력
+      </h2>
+      
+      <div class="space-y-5">
+        <!-- 주제 -->
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-2">1. 가정통신문 주제 <span class="text-red-500">*</span></label>
+          <input type="text" id="topicInput" placeholder="예: 교내 스마트폰 사용 제한 안내" class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-700 text-sm">
+        </div>
+
+        <!-- 학교의 요청사항 -->
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-2">2. 학교의 요청사항 (핵심 당부 내용)</label>
+          <textarea id="requestInput" rows="3" placeholder="예: 수업 시간 중 스마트폰 전원 끄기, 위반 시 규정에 따른 조치 안내 등" class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-700 text-sm resize-y"></textarea>
+        </div>
+
+        <!-- 기타 참고사항 -->
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-2">3. 기타 참고/강조 사항</label>
+          <textarea id="noteInput" rows="2" placeholder="예: 가정에서도 학생들의 올바른 스마트폰 사용을 지도해 주시기를 강력히 당부함." class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-700 text-sm resize-y"></textarea>
+        </div>
+
+        <!-- 옵션 (길이 및 계절인사) -->
+        <div class="flex flex-col md:flex-row gap-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+          <div class="flex-1">
+            <label class="block text-sm font-bold text-slate-700 mb-2">글 분량 선택</label>
+            <div class="flex bg-slate-200 rounded-lg p-1 gap-1">
+              <label class="flex-1 text-center cursor-pointer">
+                <input type="radio" name="lengthOption" value="짧게" class="peer sr-only">
+                <div class="py-2 text-sm font-medium text-slate-500 rounded-md peer-checked:bg-white peer-checked:text-emerald-700 peer-checked:shadow-sm transition-all">짧게 (핵심만)</div>
+              </label>
+              <label class="flex-1 text-center cursor-pointer">
+                <input type="radio" name="lengthOption" value="중간" class="peer sr-only" checked>
+                <div class="py-2 text-sm font-medium text-slate-500 rounded-md peer-checked:bg-white peer-checked:text-emerald-700 peer-checked:shadow-sm transition-all">중간 (표준)</div>
+              </label>
+              <label class="flex-1 text-center cursor-pointer">
+                <input type="radio" name="lengthOption" value="길게" class="peer sr-only">
+                <div class="py-2 text-sm font-medium text-slate-500 rounded-md peer-checked:bg-white peer-checked:text-emerald-700 peer-checked:shadow-sm transition-all">길게 (상세히)</div>
+              </label>
+            </div>
+          </div>
+
+          <div class="flex-1 flex flex-col justify-center">
+            <label class="block text-sm font-bold text-slate-700 mb-2">추가 옵션</label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="greetingCheckbox" checked class="w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
+              <span class="text-sm font-medium text-slate-700">도입부에 포멀한 인사말 포함하기</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 액션 바 -->
+    <div class="flex items-center justify-center mb-8">
+      <button id="startBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg transition disabled:bg-slate-400 disabled:cursor-not-allowed w-full text-lg flex items-center justify-center gap-2">
+        공식 가정통신문 생성하기 📝
+      </button>
+    </div>
+
+    <!-- 3. 결과 화면 -->
+    <div class="bg-white rounded-xl shadow-sm border border-emerald-200 p-6 hidden" id="resultContainer">
+      <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-4">
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <span class="bg-emerald-100 text-emerald-700 w-6 h-6 rounded-full flex items-center justify-center text-sm">💡</span> 
+          생성 결과
+        </h2>
+        <button id="copyBtn" class="bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 px-5 rounded-lg shadow transition flex items-center gap-2 text-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+          결과 복사
+        </button>
+      </div>
+      
+      <div id="resultBox" class="bg-slate-50 border border-slate-200 rounded-lg p-8 text-slate-800 leading-loose text-base whitespace-pre-wrap min-h-[300px]"></div>
+    </div>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
+      const settingsContent = document.getElementById('settingsContent');
+      const settingsIcon = document.getElementById('settingsIcon');
+      
+      const startBtn = document.getElementById('startBtn');
+      const resultContainer = document.getElementById('resultContainer');
+      const resultBox = document.getElementById('resultBox');
+      const copyBtn = document.getElementById('copyBtn');
+
+      toggleSettingsBtn.addEventListener('click', () => {
+        settingsContent.classList.toggle('hidden');
+        settingsIcon.classList.toggle('rotate-180');
+      });
+
+      // API 호출 함수
+      async function runAgent(userInputText, baseUrl, agentId) {
+        const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+        
+        // 1. 세션 생성
+        const sessionRes = await fetch(`${cleanBaseUrl}/sessions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agentId: agentId })
+        });
+        if (!sessionRes.ok) throw new Error(`세션 생성 실패 (${sessionRes.status})`);
+        const sessionData = await sessionRes.json();
+        const sessionId = sessionData.sessionId;
+
+        // 2. 에이전트 실행 (userInput 으로 매핑)
+        const runRes = await fetch(`${cleanBaseUrl}/agents/run`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: sessionId,
+            query: { 
+              userInput: userInputText 
+            } 
+          })
+        });
+        if (!runRes.ok) throw new Error(`에이전트 실행 실패 (${runRes.status})`);
+        
+        return await runRes.json();
+      }
+
+      // 결과 파싱
+      function parseStringResponse(data) {
+        if (typeof data === 'string') return data;
+        if (data.answer) return data.answer;
+        if (data.output) return data.output;
+        if (data.result) return data.result;
+        
+        let longestString = "";
+        JSON.stringify(data, (key, value) => {
+          if (typeof value === 'string' && value.length > longestString.length) {
+            longestString = value;
+          }
+          return value;
+        });
+        return longestString || "결과를 파싱할 수 없습니다.";
+      }
+
+      startBtn.addEventListener('click', async () => {
+        const topic = document.getElementById('topicInput').value.trim();
+        if (!topic) {
+          alert('가정통신문 주제를 입력해 주세요.');
+          document.getElementById('topicInput').focus();
+          return;
+        }
+
+        const baseUrl = document.getElementById('baseUrlInput').value.trim();
+        const agentId = document.getElementById('agentIdInput').value.trim();
+        if (!baseUrl || !agentId) {
+          alert('에이전트 설정을 확인해 주세요.');
+          settingsContent.classList.remove('hidden');
+          return;
+        }
+
+        const requests = document.getElementById('requestInput').value.trim() || '특별한 요청사항 없음';
+        const notes = document.getElementById('noteInput').value.trim() || '특별한 참고사항 없음';
+        const lengthOption = document.querySelector('input[name="lengthOption"]:checked').value;
+        const includeGreeting = document.getElementById('greetingCheckbox').checked;
+
+        // AI에게 전달할 최종 텍스트 조립
+        const combinedPrompt = `
+[주제] ${topic}
+[학교의 요청사항] ${requests}
+[기타 참고사항] ${notes}
+[분량] ${lengthOption}
+[계절 인사] ${includeGreeting ? '포함' : '생략'}
+        `.trim();
+
+        startBtn.disabled = true;
+        startBtn.innerHTML = `
+          <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          자료를 검색하고 문서를 작성 중입니다...
+        `;
+        resultContainer.classList.add('hidden');
+        resultBox.innerText = '';
+
+        try {
+          const apiResult = await runAgent(combinedPrompt, baseUrl, agentId);
+          let finalContent = parseStringResponse(apiResult);
+          
+          // --- 최강력 강제 청소 필터 (AI가 지시를 어길 경우 대비) ---
+          // 1. 마크다운 기호 완전히 제거 (*, #, _, `, >)
+          finalContent = finalContent.replace(/[*#_`>]/g, '');
+          // 2. 표(Table) 구성을 위한 구분선(|) 제거
+          finalContent = finalContent.replace(/\|/g, '');
+          // 3. 점선/실선(---) 가로줄 제거
+          finalContent = finalContent.replace(/---+/g, '');
+          // 4. 이모지 강제 제거
+          finalContent = finalContent.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '');
+          
+          // 결과 표시
+          resultBox.innerText = finalContent.trim();
+          resultContainer.classList.remove('hidden');
+          
+        } catch (err) {
+          console.error(err);
+          resultBox.innerHTML = `<span class="text-red-600 font-bold">오류가 발생했습니다:</span><br>${err.message}`;
+          resultContainer.classList.remove('hidden');
+        } finally {
+          startBtn.disabled = false;
+          startBtn.innerHTML = '다시 생성하기 🔄';
+        }
+      });
+
+      // 복사 기능
+      copyBtn.addEventListener('click', () => {
+        const textToCopy = resultBox.innerText;
+        if (!textToCopy) return;
+        
+        navigator.clipboard.writeText(textToCopy);
+        
+        const originalHtml = copyBtn.innerHTML;
+        copyBtn.innerHTML = '✔ 복사 완료';
+        copyBtn.classList.replace('bg-slate-800', 'bg-emerald-600');
+        copyBtn.classList.replace('hover:bg-slate-900', 'hover:bg-emerald-700');
+        
+        setTimeout(() => {
+          copyBtn.innerHTML = originalHtml;
+          copyBtn.classList.replace('bg-emerald-600', 'bg-slate-800');
+          copyBtn.classList.replace('hover:bg-emerald-700', 'hover:bg-slate-900');
+        }, 1500);
+      });
+    });
+  </script>
+</body>
+</html>
