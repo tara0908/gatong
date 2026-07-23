@@ -1,162 +1,766 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>가정통신문 자동 작성기</title>
-    <style>
-        body {
-            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-            background-color: #f4f7f6;
-            padding: 40px 20px;
-            color: #333;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            font-size: 24px;
-            margin-bottom: 30px;
-            color: #2c3e50;
-        }
-        label {
-            font-weight: bold;
-            margin-top: 20px;
-            display: block;
-            color: #555;
-            font-size: 14px;
-        }
-        input[type="password"], textarea, select {
-            width: 100%;
-            padding: 12px;
-            margin-top: 8px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 15px;
-            font-family: inherit;
-        }
-        textarea {
-            height: 120px;
-            resize: vertical;
-        }
-        select {
-            cursor: pointer;
-            background-color: #fff;
-        }
-        button {
-            width: 100%;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 15px;
-            margin-top: 30px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        .output-area {
-            margin-top: 20px;
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 6px;
-            min-height: 150px;
-            border: 1px solid #eee;
-            white-space: pre-wrap;
-            font-size: 15px;
-            line-height: 1.6;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>가정통신문 자동 생성기</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      font-family:
+        Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
+    }
+
+    .letter-content {
+      white-space: pre-wrap;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      line-height: 1.9;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.45);
+      border-top-color: #ffffff;
+      border-radius: 9999px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
-<body>
 
-    <div class="container">
-        <h1>가정통신문 자동 작성기</h1>
+<body class="min-h-screen bg-slate-50 text-slate-800">
+  <main class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:py-12">
 
-        <!-- 에이전트 ID 입력란 (비밀번호 형식으로 숨김 처리) -->
-        <label for="agent_id">에이전트 ID (API Key)</label>
-        <input type="password" id="agent_id" placeholder="에이전트 ID를 입력하세요 (화면에 노출되지 않습니다)">
+    <header class="mb-8 text-center">
+      <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-2xl text-white shadow-sm">
+        ✉️
+      </div>
+      <h1 class="text-3xl font-bold tracking-tight text-slate-900">
+        가정통신문 자동 생성기
+      </h1>
+      <p class="mt-3 text-sm leading-6 text-slate-500 sm:text-base">
+        전달할 내용을 입력하면 AI가 자연스럽고 정돈된 가정통신문을 작성합니다.
+      </p>
+    </header>
 
-        <label for="user_prompt">전달할 핵심 내용 (학교 요청사항)</label>
-        <textarea id="user_prompt" placeholder="예: 전동 킥보드 탑승 금지, 적발 시 압수 조치 안내 등 핵심 내용을 적어주세요."></textarea>
+    <!-- 설정 -->
+    <section class="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <button
+        id="settingsToggle"
+        type="button"
+        class="flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-slate-50"
+        aria-expanded="false"
+        aria-controls="settingsPanel"
+      >
+        <div>
+          <div class="font-semibold text-slate-800">AI 에이전트 연결 설정</div>
+          <div class="mt-1 text-xs text-slate-500">
+            Agent ID와 API 서버 연결 정보를 설정합니다.
+          </div>
+        </div>
 
-        <label for="length_option">가정통신문 분량 선택</label>
-        <select id="length_option">
-            <option value="짧게">짧게 (핵심만 간결하게)</option>
-            <option value="중간" selected>중간 (배경과 요청사항을 균형 있게)</option>
-            <option value="길게">길게 (상세하고 풍부하게)</option>
-        </select>
+        <svg
+          id="settingsChevron"
+          class="h-5 w-5 text-slate-400 transition-transform duration-200"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
 
-        <button onclick="generateLetter()">가정통신문 생성하기</button>
+      <div id="settingsPanel" class="hidden border-t border-slate-100 px-5 py-5">
+        <div class="grid gap-5 md:grid-cols-2">
 
-        <label>생성된 가정통신문 결과:</label>
-        <div id="output" class="output-area">여기에 작성된 가정통신문이 표시됩니다.</div>
+          <!-- Agent ID: 화면상 마스킹 -->
+          <div>
+            <label for="agentId" class="mb-2 block text-sm font-medium text-slate-700">
+              Agent ID
+            </label>
+            <div class="relative">
+              <input
+                id="agentId"
+                type="password"
+                value="6a605d7a1c4a469e7abef38b"
+                autocomplete="off"
+                spellcheck="false"
+                class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-12 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              />
+              <button
+                type="button"
+                data-toggle-password="agentId"
+                class="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs text-slate-500 hover:bg-slate-100"
+                aria-label="Agent ID 보기 또는 숨기기"
+              >
+                보기
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label for="baseUrl" class="mb-2 block text-sm font-medium text-slate-700">
+              BASE_URL
+            </label>
+            <input
+              id="baseUrl"
+              type="url"
+              value="https://langbridge.kosac.laivdata.com/"
+              autocomplete="off"
+              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+            />
+          </div>
+
+          <!-- 선택적 API Key: 화면상 마스킹 -->
+          <div class="md:col-span-2">
+            <label for="apiKey" class="mb-2 block text-sm font-medium text-slate-700">
+              API Key <span class="font-normal text-slate-400">(필요한 경우만 입력)</span>
+            </label>
+            <div class="relative">
+              <input
+                id="apiKey"
+                type="password"
+                value=""
+                placeholder="API Key가 필요한 경우 입력"
+                autocomplete="new-password"
+                spellcheck="false"
+                class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-12 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              />
+              <button
+                type="button"
+                data-toggle-password="apiKey"
+                class="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs text-slate-500 hover:bg-slate-100"
+                aria-label="API Key 보기 또는 숨기기"
+              >
+                보기
+              </button>
+            </div>
+            <p class="mt-2 text-xs leading-5 text-slate-500">
+              API Key를 입력하면 기본적으로 <code class="rounded bg-slate-100 px-1 py-0.5">Authorization: Bearer ...</code>
+              헤더로 전송합니다. API 서버의 인증 방식이 다르면 코드의 <code class="rounded bg-slate-100 px-1 py-0.5">buildHeaders()</code> 부분을 수정해야 합니다.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-800">
+          브라우저에서 API 서버로 직접 요청하므로 서버 측에서
+          <strong>CORS</strong>가 허용되어 있어야 합니다.
+          또한 별표(••••) 표시는 화면상 마스킹일 뿐입니다.
+          GitHub Pages 같은 정적 HTML에서는 Agent ID나 API Key를 완전히 비밀로 숨길 수 없습니다.
+          중요한 비밀키는 서버 또는 서버리스 프록시에서 보관하는 방식을 권장합니다.
+        </div>
+      </div>
+    </section>
+
+    <!-- 입력 -->
+    <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+      <div>
+        <label for="topicInput" class="mb-2 block text-base font-semibold text-slate-800">
+          전달할 내용
+        </label>
+        <p class="mb-3 text-sm text-slate-500">
+          학부모님께 안내할 핵심 내용을 자유롭게 입력해 주세요.
+        </p>
+
+        <textarea
+          id="topicInput"
+          rows="10"
+          placeholder="예: 최근 학교 주변에서 자전거 등하교로 인한 안전사고 위험이 있어 학생들의 자전거 등하교를 금지하고자 합니다. 도보 이용을 권장하고 보호자의 협조를 요청하는 내용으로 작성해 주세요."
+          class="w-full resize-y rounded-2xl border border-slate-300 bg-white px-4 py-4 text-[15px] leading-7 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+        ></textarea>
+      </div>
+
+      <div class="mt-5 grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+        <div>
+          <label for="lengthSelect" class="mb-2 block text-sm font-medium text-slate-700">
+            분량
+          </label>
+          <select
+            id="lengthSelect"
+            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 sm:min-w-48"
+          >
+            <option value="짧게">짧게 (100자 내외)</option>
+            <option value="중간" selected>중간 (300자 내외)</option>
+            <option value="길게">길게 (500자 내외)</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="seasonMonthSelect" class="mb-2 block text-sm font-medium text-slate-700">
+            계절 인사
+          </label>
+          <select
+            id="seasonMonthSelect"
+            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 sm:min-w-48"
+          >
+            <option value="1">1월</option>
+            <option value="2">2월</option>
+            <option value="3">3월</option>
+            <option value="4">4월</option>
+            <option value="5">5월</option>
+            <option value="6">6월</option>
+            <option value="7">7월</option>
+            <option value="8">8월</option>
+            <option value="9">9월</option>
+            <option value="10">10월</option>
+            <option value="11">11월</option>
+            <option value="12">12월</option>
+          </select>
+          <p class="mt-2 text-xs text-slate-400">
+            선택한 월에 어울리는 자연스러운 계절 인사를 반영합니다.
+          </p>
+        </div>
+
+        <button
+          id="generateBtn"
+          type="button"
+          class="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-blue-400"
+        >
+          <span id="generateBtnIcon" aria-hidden="true">✨</span>
+          <span id="generateBtnText">생성하기</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 결과 -->
+    <section
+      id="resultSection"
+      class="mt-6 hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+    >
+      <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="font-semibold text-slate-800">생성된 가정통신문</h2>
+          <p class="mt-1 text-xs text-slate-500">
+            내용을 확인한 뒤 필요에 맞게 수정해서 사용하세요.
+          </p>
+        </div>
+
+        <button
+          id="copyBtn"
+          type="button"
+          class="hidden inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-100"
+        >
+          <span aria-hidden="true">📋</span>
+          복사하기
+        </button>
+      </div>
+
+      <div class="p-5 sm:p-7">
+        <div
+          id="resultContent"
+          class="letter-content rounded-xl bg-slate-50 p-5 text-[15px] text-slate-800"
+        ></div>
+      </div>
+    </section>
+
+    <!-- 토스트 -->
+    <div
+      id="toast"
+      class="pointer-events-none fixed bottom-6 left-1/2 z-50 hidden -translate-x-1/2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white shadow-lg"
+      role="status"
+      aria-live="polite"
+    >
+      가정통신문이 복사되었습니다.
     </div>
 
-    <script>
-        async function generateLetter() {
-            const agentId = document.getElementById('agent_id').value;
-            const promptText = document.getElementById('user_prompt').value;
-            const lengthOption = document.getElementById('length_option').value;
-            const outputDiv = document.getElementById('output');
+    <footer class="mt-8 text-center text-xs leading-5 text-slate-400">
+      AI가 생성한 내용은 실제 발송 전 반드시 확인해 주세요.
+    </footer>
+  </main>
 
-            if (!agentId.trim()) {
-                alert("에이전트 ID를 입력해주세요.");
-                return;
-            }
-            if (!promptText.trim()) {
-                alert("전달할 핵심 내용을 입력해주세요.");
-                return;
-            }
+  <script>
+    const settingsToggle = document.getElementById("settingsToggle");
+    const settingsPanel = document.getElementById("settingsPanel");
+    const settingsChevron = document.getElementById("settingsChevron");
 
-            outputDiv.innerHTML = "에이전트와 통신하여 가정통신문을 생성 중입니다... 잠시만 기다려주세요.";
+    const agentIdInput = document.getElementById("agentId");
+    const baseUrlInput = document.getElementById("baseUrl");
+    const apiKeyInput = document.getElementById("apiKey");
 
-            try {
-                // 💡 아래의 URL('https://api.your-platform.com/v1/run')을 실제 사용 중인 플랫폼의 API 엔드포인트 주소로 변경하십시오.
-                const apiUrl = 'https://api.your-platform.com/v1/run'; 
-                
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${agentId}`, // 입력받은 에이전트 ID를 토큰으로 사용
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        inputs: {
-                            "user_prompt": promptText,
-                            "length_option": lengthOption
-                        },
-                        response_mode: "blocking",
-                        user: "teacher-1"
-                    })
-                });
+    const topicInput = document.getElementById("topicInput");
+    const lengthSelect = document.getElementById("lengthSelect");
+    const seasonMonthSelect = document.getElementById("seasonMonthSelect");
 
-                if (!response.ok) {
-                    throw new Error(`서버 통신 오류: ${response.status}`);
-                }
+    // 접속한 시점의 현재 월을 기본값으로 선택
+    seasonMonthSelect.value = String(new Date().getMonth() + 1);
 
-                const resultData = await response.json();
-                
-                // 💡 결과 데이터를 뽑아내는 경로는 플랫폼에 따라 다를 수 있습니다. (예: resultData.answer 등)
-                outputDiv.innerHTML = resultData.answer || resultData.data.outputs.answer || "응답은 성공했으나 텍스트를 찾을 수 없습니다.";
+    const generateBtn = document.getElementById("generateBtn");
+    const generateBtnIcon = document.getElementById("generateBtnIcon");
+    const generateBtnText = document.getElementById("generateBtnText");
 
-            } catch (error) {
-                console.error("API 호출 에러:", error);
-                outputDiv.innerHTML = "오류가 발생했습니다. 에이전트 ID나 네트워크 상태를 확인해주세요.\n(개발자 참고: " + error.message + ")";
-            }
+    const resultSection = document.getElementById("resultSection");
+    const resultContent = document.getElementById("resultContent");
+    const copyBtn = document.getElementById("copyBtn");
+    const toast = document.getElementById("toast");
+
+    let latestLetterContent = "";
+    let toastTimer = null;
+
+    settingsToggle.addEventListener("click", () => {
+      const isOpen = !settingsPanel.classList.contains("hidden");
+      settingsPanel.classList.toggle("hidden");
+      settingsChevron.classList.toggle("rotate-180");
+      settingsToggle.setAttribute("aria-expanded", String(!isOpen));
+    });
+
+    // Agent ID / API Key 보기·숨기기
+    document.querySelectorAll("[data-toggle-password]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const inputId = button.getAttribute("data-toggle-password");
+        const input = document.getElementById(inputId);
+
+        const willShow = input.type === "password";
+        input.type = willShow ? "text" : "password";
+        button.textContent = willShow ? "숨김" : "보기";
+      });
+    });
+
+    function normalizeBaseUrl(url) {
+      return url.trim().replace(/\/+$/, "");
+    }
+
+    // API Key가 비어 있으면 Authorization 헤더를 넣지 않습니다.
+    function buildHeaders() {
+      const headers = {
+        "Content-Type": "application/json"
+      };
+
+      const apiKey = apiKeyInput.value.trim();
+
+      if (apiKey) {
+        headers["Authorization"] = `Bearer ${apiKey}`;
+      }
+
+      return headers;
+    }
+
+    function setLoading(isLoading) {
+      generateBtn.disabled = isLoading;
+      topicInput.disabled = isLoading;
+      lengthSelect.disabled = isLoading;
+      seasonMonthSelect.disabled = isLoading;
+      agentIdInput.disabled = isLoading;
+      baseUrlInput.disabled = isLoading;
+      apiKeyInput.disabled = isLoading;
+
+      if (isLoading) {
+        generateBtnIcon.textContent = "";
+        generateBtnIcon.className = "spinner";
+        generateBtnText.textContent = "생성 중...";
+      } else {
+        generateBtnIcon.className = "";
+        generateBtnIcon.textContent = "✨";
+        generateBtnText.textContent = "생성하기";
+      }
+    }
+
+    function showResult(message, isError = false) {
+      resultSection.classList.remove("hidden");
+      resultContent.textContent = message;
+
+      if (isError) {
+        resultContent.className =
+          "letter-content rounded-xl border border-red-200 bg-red-50 p-5 text-[15px] text-red-700";
+        copyBtn.classList.add("hidden");
+      } else {
+        resultContent.className =
+          "letter-content rounded-xl bg-slate-50 p-5 text-[15px] text-slate-800";
+        copyBtn.classList.remove("hidden");
+      }
+
+      resultSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.remove("hidden");
+
+      if (toastTimer) {
+        clearTimeout(toastTimer);
+      }
+
+      toastTimer = setTimeout(() => {
+        toast.classList.add("hidden");
+      }, 2200);
+    }
+
+    async function parseJsonResponse(response, stepName) {
+      let data;
+
+      try {
+        data = await response.json();
+      } catch (error) {
+        throw new Error(
+          `${stepName} 응답을 JSON으로 해석할 수 없습니다. 서버 응답 형식을 확인해 주세요.`
+        );
+      }
+
+      if (!response.ok) {
+        const serverMessage =
+          data?.message ||
+          data?.error?.message ||
+          data?.error ||
+          data?.detail ||
+          `HTTP ${response.status}`;
+
+        throw new Error(`${stepName} 실패: ${serverMessage}`);
+      }
+
+      return data;
+    }
+
+    // 응답 구조가 달라도 가정통신문 내용을 최대한 안전하게 찾아냅니다.
+    // 지원 예:
+    // { answer: { letter_content: "..." } }
+    // { answer: "가정통신문..." }
+    // { answer: "{\"letter_content\":\"가정통신문...\"}" }
+    // { data: { answer: ... } }
+    // 배열/객체 안쪽에 letter_content가 더 깊게 중첩된 경우
+    function extractLetterContent(resultData) {
+      const visited = new WeakSet();
+
+      function cleanString(value) {
+        return value
+          .trim()
+          .replace(/^```(?:json)?\s*/i, "")
+          .replace(/\s*```$/i, "")
+          .trim();
+      }
+
+      function tryParseJsonString(value) {
+        const cleaned = cleanString(value);
+
+        if (
+          !cleaned ||
+          !(
+            (cleaned.startsWith("{") && cleaned.endsWith("}")) ||
+            (cleaned.startsWith("[") && cleaned.endsWith("]"))
+          )
+        ) {
+          return null;
         }
-    </script>
 
+        try {
+          return JSON.parse(cleaned);
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function search(value, depth = 0) {
+        if (value == null || depth > 15) {
+          return null;
+        }
+
+        if (typeof value === "string") {
+          const cleaned = cleanString(value);
+
+          if (!cleaned) {
+            return null;
+          }
+
+          const parsed = tryParseJsonString(cleaned);
+
+          if (parsed !== null) {
+            const nestedResult = search(parsed, depth + 1);
+            if (nestedResult) {
+              return nestedResult;
+            }
+          }
+
+          return null;
+        }
+
+        if (typeof value !== "object") {
+          return null;
+        }
+
+        if (visited.has(value)) {
+          return null;
+        }
+        visited.add(value);
+
+        const preferredKeys = [
+          "letter_content",
+          "letterContent",
+          "letter",
+          "generated_letter"
+        ];
+
+        for (const key of preferredKeys) {
+          if (Object.prototype.hasOwnProperty.call(value, key)) {
+            const candidate = value[key];
+
+            if (typeof candidate === "string" && cleanString(candidate)) {
+              const parsedCandidate = tryParseJsonString(candidate);
+
+              if (parsedCandidate !== null) {
+                const parsedResult = search(parsedCandidate, depth + 1);
+                if (parsedResult) {
+                  return parsedResult;
+                }
+              }
+
+              return cleanString(candidate);
+            }
+
+            const nestedCandidate = search(candidate, depth + 1);
+            if (nestedCandidate) {
+              return nestedCandidate;
+            }
+          }
+        }
+
+        const priorityKeys = [
+          "answer",
+          "data",
+          "result",
+          "output",
+          "response"
+        ];
+
+        for (const key of priorityKeys) {
+          if (!Object.prototype.hasOwnProperty.call(value, key)) {
+            continue;
+          }
+
+          const candidate = value[key];
+
+          if (key === "answer" && typeof candidate === "string") {
+            const cleaned = cleanString(candidate);
+
+            if (!cleaned) {
+              continue;
+            }
+
+            const parsed = tryParseJsonString(cleaned);
+
+            if (parsed !== null) {
+              const parsedResult = search(parsed, depth + 1);
+              if (parsedResult) {
+                return parsedResult;
+              }
+            }
+
+            return cleaned;
+          }
+
+          const nestedResult = search(candidate, depth + 1);
+          if (nestedResult) {
+            return nestedResult;
+          }
+        }
+
+        if (Array.isArray(value)) {
+          for (const item of value) {
+            const found = search(item, depth + 1);
+            if (found) {
+              return found;
+            }
+          }
+          return null;
+        }
+
+        for (const [key, candidate] of Object.entries(value)) {
+          if (
+            preferredKeys.includes(key) ||
+            priorityKeys.includes(key)
+          ) {
+            continue;
+          }
+
+          const found = search(candidate, depth + 1);
+          if (found) {
+            return found;
+          }
+        }
+
+        return null;
+      }
+
+      return search(resultData);
+    }
+
+    async function runAgent() {
+      const agentId = agentIdInput.value.trim();
+      const baseUrl = normalizeBaseUrl(baseUrlInput.value);
+      const userInput = topicInput.value.trim();
+      const lengthOption = lengthSelect.value;
+      const seasonMonth = seasonMonthSelect.value;
+
+      const lengthInstructionMap = {
+        "짧게": "100자 내외",
+        "중간": "300자 내외",
+        "길게": "500자 내외"
+      };
+
+      const lengthInstruction =
+        lengthInstructionMap[lengthOption] || "300자 내외";
+
+      if (!userInput) {
+        topicInput.focus();
+        showResult("전달할 내용을 입력해 주세요.", true);
+        return;
+      }
+
+      if (!agentId) {
+        showResult("Agent ID를 입력해 주세요.", true);
+        return;
+      }
+
+      if (!baseUrl) {
+        showResult("BASE_URL을 입력해 주세요.", true);
+        return;
+      }
+
+      try {
+        new URL(baseUrl);
+      } catch (error) {
+        showResult("BASE_URL 형식이 올바르지 않습니다.", true);
+        return;
+      }
+
+      setLoading(true);
+      latestLetterContent = "";
+
+      try {
+        // 1단계: 세션 생성
+        const sessionResponse = await fetch(`${baseUrl}/sessions`, {
+          method: "POST",
+          headers: buildHeaders(),
+          body: JSON.stringify({
+            agentId: agentId
+          })
+        });
+
+        const sessionData = await parseJsonResponse(
+          sessionResponse,
+          "세션 생성"
+        );
+
+        const sessionId =
+          sessionData?.sessionId ??
+          sessionData?.data?.sessionId;
+
+        if (!sessionId) {
+          console.error("세션 생성 실제 응답:", sessionData);
+          throw new Error(
+            "세션 생성 응답에서 sessionId를 찾을 수 없습니다."
+          );
+        }
+
+        // 2단계: Agent 실행
+        const agentResponse = await fetch(`${baseUrl}/agents/run`, {
+          method: "POST",
+          headers: buildHeaders(),
+          body: JSON.stringify({
+            sessionId: sessionId,
+            query: {
+              userInput:
+                `${userInput}\n\n[작성 조건] ${seasonMonth}월에 어울리는 자연스러운 계절 인사로 시작해 주세요.`,
+              user_length_option: lengthInstruction,
+              user_season_month: `${seasonMonth}월`
+            }
+          })
+        });
+
+        const resultData = await parseJsonResponse(
+          agentResponse,
+          "에이전트 실행"
+        );
+
+        console.log("에이전트 실제 응답:", resultData);
+
+        const letterContent = extractLetterContent(resultData);
+
+        if (!letterContent) {
+          console.error(
+            "가정통신문 내용을 추출하지 못한 전체 응답:",
+            resultData
+          );
+          throw new Error(
+            "AI 응답은 정상적으로 도착했지만 가정통신문 본문을 자동으로 찾지 못했습니다. 응답 구조를 확인해 주세요."
+          );
+        }
+
+        latestLetterContent = letterContent;
+        showResult(letterContent);
+
+      } catch (error) {
+        console.error(error);
+
+        let errorMessage =
+          error instanceof Error
+            ? error.message
+            : "알 수 없는 오류가 발생했습니다.";
+
+        if (
+          error instanceof TypeError &&
+          /fetch/i.test(errorMessage)
+        ) {
+          errorMessage =
+            "네트워크 요청에 실패했습니다. 인터넷 연결, BASE_URL, 서버 상태 및 CORS 허용 여부를 확인해 주세요.";
+        }
+
+        showResult(`오류가 발생했습니다.\n\n${errorMessage}`, true);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function copyLetter() {
+      if (!latestLetterContent) return;
+
+      try {
+        await navigator.clipboard.writeText(latestLetterContent);
+        showToast("가정통신문이 복사되었습니다.");
+      } catch (error) {
+        try {
+          const textarea = document.createElement("textarea");
+          textarea.value = latestLetterContent;
+          textarea.style.position = "fixed";
+          textarea.style.opacity = "0";
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+
+          const copied = document.execCommand("copy");
+          document.body.removeChild(textarea);
+
+          if (!copied) throw new Error("복사 실패");
+
+          showToast("가정통신문이 복사되었습니다.");
+        } catch (fallbackError) {
+          alert(
+            "클립보드 복사에 실패했습니다. 브라우저의 클립보드 권한을 확인해 주세요."
+          );
+        }
+      }
+    }
+
+    generateBtn.addEventListener("click", runAgent);
+    copyBtn.addEventListener("click", copyLetter);
+
+    topicInput.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        runAgent();
+      }
+    });
+  </script>
 </body>
 </html>
